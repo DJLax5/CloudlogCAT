@@ -1,4 +1,5 @@
-﻿Imports System.Runtime
+﻿Imports System.Diagnostics.Contracts
+Imports System.Runtime
 Imports CloudlogCAT.My
 
 Public Class Form1
@@ -175,7 +176,9 @@ Public Class Form1
 
 
         Dim allOK As Boolean
+        Dim anyTarget As Boolean
         allOK = True ' If any of the targets fail, we need to know
+        anyTarget = False ' Additional flag, if any target is supposed to be active
 
         Dim timestamp As String = DateTime.UtcNow.ToString("yyyy/MM/dd HH:mm:ss")
 
@@ -183,6 +186,7 @@ Public Class Form1
         For Each target As CloudlogTarget In targets
             ' upload each to target, if requested and possible
             If target.active And Not String.Equals(target.url, "") Then
+                anyTarget = True
                 Try
                     Using client As New Net.WebClient
                         System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12
@@ -219,9 +223,11 @@ Public Class Form1
             End If
         Next
 
-        ' all targets uploaded sucessfully!
-        If allOK Then
-            ToolStripStatusLabel1.Text = "Cloudlog Synced: " + timestamp
+
+        If Not anyTarget Then ' haven't even tried, display an error
+            ToolStripStatusLabel1.Text = "Cloudlog Synced: Failed, no target active"
+        ElseIf allOK Then
+            ToolStripStatusLabel1.Text = "Cloudlog Synced: " + timestamp ' all targets uploaded sucessfully!
         End If
 
     End Sub
